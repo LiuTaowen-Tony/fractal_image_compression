@@ -126,7 +126,11 @@ def main_n_books():
   print(img)
   code_books = find_code_book_n_times(img, 10)
   for i in range(10):
-    new_img = np.ones((128,128), dtype = np.float32)
+    new_img = cv2.imread("sierpinski.png", cv2.IMREAD_GRAYSCALE)
+    new_img = cv2.resize(new_img, (128,128))
+    new_img = np.float32(new_img)
+    new_img /= 255
+    # new_img = np.ones((128,128), dtype = np.float32)
     new_img = encode_with_n_code_books(new_img, code_books[:i+1])
     new_img *= 255
     new_img = np.uint8(new_img)

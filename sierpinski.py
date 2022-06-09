@@ -26,9 +26,7 @@ def sierpinski():
                    [0, 0.5, 32]])
   for _ in range(100):
     pic = w(pic, mat1, mat2, mat3)
-
   return pic
-
 sierpinski = sierpinski()
 
 cv2.imwrite("sierpinski.tiff", sierpinski)
