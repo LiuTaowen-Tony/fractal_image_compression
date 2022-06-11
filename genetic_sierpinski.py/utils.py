@@ -1,6 +1,10 @@
 import numpy as np
 import cv2
-from typing import List
+from typing import List, Tuple, Function
+
+Chromosome = List[np.ndarray]
+DistanceMetric = Function[(np.ndarray, np.ndarray), float]
+Population = List[Chromosome]
 
 def similarity_measure(pic1, pic2):
   assert pic1.shape == pic2.shape
@@ -59,6 +63,18 @@ def test_apply_transformations():
   cv2.imshow("b", np.uint8(b) * 255)
   cv2.waitKey(0)
   print("apply_transformations test passed")
+
+
+def random_affine() -> np.ndarray:
+    e, f = np.random.uniform(0., 1., 2)
+    a, b = np.random.uniform(-e, 1-e, 2)
+    if (a + b + e) > 1 or (a + b - e) < 0:
+        a, b = a / 2, b / 2
+    c, d = np.random.uniform(-f, 1-f, 2)
+    if (c + d + f) > 1 or (c + d - f) < 0:
+        c, d = c / 2, d / 2
+    return np.array([[a, b, e],
+                     [c, d, f]])
 
 if "__main__" == __name__:
   test_apply_transformations()

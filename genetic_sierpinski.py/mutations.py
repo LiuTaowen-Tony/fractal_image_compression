@@ -1,5 +1,6 @@
 import numpy as np
 import cv2
+import utils
 
 def affine_mat_to_mat_vec(affine_mat):
   mat = affine_mat[:, :2]
@@ -15,46 +16,73 @@ def rotation(w):
   rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)],
                               [np.sin(theta), np.cos(theta)]])
   mat = np.dot(rotation_matrix, mat)
-  return mat_vec_to_affine(mat, vec)
+  new_map = mat_vec_to_affine(mat, vec)
+  w[:, :] = new_map
+
 
 def scale(w):
   # probably need to change this
   s = np.random.uniform(0.5, 1.5)
-  w_copy = w.copy()
   (a, b, e,
-   c, d, f) = w_copy.reshape((6,))
+   c, d, f) = w.reshape((6,))
   if np.random.random() < 0.5:
-    w_copy[0, 0] = a * s
+    w[0, 0] = a * s
   else:
-    w_copy[0, 1] = b * s
-  return w_copy
+    w[0, 1] = b * s
 
 def skew(w):
   s = np.random.uniform(0.0, 1.0)
-  w_copy = w.copy()
   (a, b, e,
-   c, d, f) = w_copy.reshape((6,))
+   c, d, f) = w.reshape((6,))
   if np.random.random() < 0.5:
-    w_copy[1, 0] = a * s + b
-    w_copy[1, 1] = c * s + d
+    w[1, 0] = a * s + b
+    w[1, 1] = c * s + d
   else:
-    w_copy[0, 0] = a + b * s
-    w_copy[0, 1] = c + d * s
-  return w_copy
+    w[0, 0] = a + b * s
+    w[0, 1] = c + d * s
 
 def translation( w):
   (a, b, e,
-   c, d, f) = w_copy.reshape((6,))
+   c, d, f) = w.reshape((6,))
   r = (e + f) / 4
   x = np.random.uniform(-r, r)
-  w_copy = w.copy()
+  w = w.copy()
   if np.random.random() < 0.5:
-    w_copy[0, 2] = e + x
+    w[0, 2] = e + x
   else:
-    w_copy[1, 2] = f + x
-  return w_copy
+    w[1, 2] = f + x
 
 
+def mutate(cs : List[Chromosome], mutProb : float, ifsMutProb : float):
+    for chromo in cs:
+        if mutProb > np.random.random():
+            if ifsMutProb > np.random.random(): # is ifs mutation
+                if np.random.random() < 0.5: chromo.remove(np.random.choice(chromo))
+                else:                        chromo.append(random_affine())
+            else: # is map mutation
+                if np.random.random() < 0.5: map_mutation(chromo)
+                else:                        map_perturation(chromo)
+
+def map_mutation(chromosome: Chromosome):
+    """
+    mutate a chromosome by changing a random affine map
+    """
+    flag = np.random.random()
+    item = np.random.choice(chromosome)
+    if flag < 0.25:   rotation(item)
+    elif flag < 0.5:  translation(item)
+    elif flag < 0.75: skew(item)
+    else:             scale(item)
+
+def map_perturation(chromosome: Chromosome):
+    map = np.random.choice(chromosome)
+    flag = np.random.random()
+    if flag < 1 / 6:   map[0,0] += np.random.random() - 0.5
+    elif flag < 2 / 6: map[0,1] += np.random.random() - 0.5
+    elif flag < 3 / 6: map[1,0] += np.random.random() - 0.5
+    elif flag < 4 / 6: map[1,1] += np.random.random() - 0.5
+    elif flag < 5 / 6: map[0,2] += np.random.random() - 0.5
+    else:              map[1,2] += np.random.random() - 0.5
 
     
 
