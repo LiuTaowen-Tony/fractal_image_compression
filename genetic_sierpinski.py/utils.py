@@ -31,6 +31,8 @@ def sierpinski_gen(length):
     pic = apply_transformations(pic, chromesome)
   return pic
 
+sierpinski_128 = sierpinski_gen(128)
+
 def apply_transformations(pic, chromosome : List[np.ndarray]):
   new_pic = np.zeros(pic.shape, dtype = np.uint8)
   pic_copy = np.copy(pic)
