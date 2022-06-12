@@ -76,8 +76,8 @@ mat3 = np.array([[0.5, 0, 0],
 identity_map = np.array([[1, 0, 0],
                          [0, 1, 0]], dtype=np.float32)
 
-def det(mat):
-  return mat[0, 0] * mat[1, 1] - mat[0, 1] * mat[1, 0]
+def det_abs(mat):
+  return np.abs(mat[0, 0] * mat[1, 1] - mat[0, 1] * mat[1, 0])
 
 # d(S, w(S))
 def cost(args):
@@ -85,9 +85,9 @@ def cost(args):
   y = w(sierpinski, mat1, mat2, mat3)
   
   punish_on_identity_map = 0
-  punish_on_identity_map += det(mat1) * 5000
-  punish_on_identity_map += det(mat2) * 5000
-  punish_on_identity_map += det(mat3) * 5000
+  punish_on_identity_map += det_abs(mat1) * 5000
+  punish_on_identity_map += det_abs(mat2) * 5000
+  punish_on_identity_map += det_abs(mat3) * 5000
 
   return stacked_metric(sierpinski, y) + punish_on_identity_map 
 
