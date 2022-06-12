@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-import utils
+from utils import *
 
 def affine_mat_to_mat_vec(affine_mat):
   mat = affine_mat[:, :2]
@@ -53,29 +53,33 @@ def translation( w):
     w[1, 2] = f + x
 
 
-def mutate(cs : List[Chromosome], mutProb : float, ifsMutProb : float):
+def mutate(cs : List[Chromosome], mutProb : float):
     for chromo in cs:
         if mutProb > np.random.random():
-            if ifsMutProb > np.random.random(): # is ifs mutation
-                if np.random.random() < 0.5: chromo.remove(np.random.choice(chromo))
-                else:                        chromo.append(random_affine())
-            else: # is map mutation
-                if np.random.random() < 0.5: map_mutation(chromo)
-                else:                        map_perturation(chromo)
+            if np.random.random() < 0.5: map_mutation(chromo)
+            else:                        map_perturbation(chromo)
+            # if ifsMutProb > np.random.random(): # is ifs mutation
+            #     if np.random.random() < 0.5: chromo.remove(np.random.choice(chromo))
+            #     else:                        chromo.append(random_affine())
+            # else: # is map mutation
+            #     if np.random.random() < 0.5: map_mutation(chromo)
+            #     else:                        map_perturbation(chromo)
 
 def map_mutation(chromosome: Chromosome):
     """
     mutate a chromosome by changing a random affine map
     """
     flag = np.random.random()
-    item = np.random.choice(chromosome)
+    i = np.random.randint(0, len(chromosome))
+    item = chromosome[i]
     if flag < 0.25:   rotation(item)
     elif flag < 0.5:  translation(item)
     elif flag < 0.75: skew(item)
     else:             scale(item)
 
-def map_perturation(chromosome: Chromosome):
-    map = np.random.choice(chromosome)
+def map_perturbation(chromosome: Chromosome):
+    i = np.random.randint(0, len(chromosome))
+    map = chromosome[i]
     flag = np.random.random()
     if flag < 1 / 6:   map[0,0] += np.random.random() - 0.5
     elif flag < 2 / 6: map[0,1] += np.random.random() - 0.5

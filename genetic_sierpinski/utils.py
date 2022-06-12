@@ -1,10 +1,15 @@
+from grpc import Call
 import numpy as np
 import cv2
-from typing import List, Tuple, Function
+from typing import List, Tuple, Callable
 
 Chromosome = List[np.ndarray]
-DistanceMetric = Function[(np.ndarray, np.ndarray), float]
+DistanceMetric = Callable[[np.ndarray, np.ndarray], float]
 Population = List[Chromosome]
+
+def dilate(pic):
+  kernel = np.ones((3, 3), dtype = np.uint8)
+  return cv2.dilate(pic, kernel)
 
 def similarity_measure(pic1, pic2):
   assert pic1.shape == pic2.shape
@@ -35,7 +40,6 @@ def sierpinski_gen(length):
     pic = apply_transformations(pic, chromesome)
   return pic
 
-sierpinski_128 = sierpinski_gen(128)
 
 def apply_transformations(pic, chromosome : List[np.ndarray]):
   new_pic = np.zeros(pic.shape, dtype = np.uint8)
@@ -51,9 +55,7 @@ def apply_transformations(pic, chromosome : List[np.ndarray]):
   new_pic = np.bool8(new_pic)
   return new_pic
 
-def dilate(pic):
-  kernel = np.ones((3, 3), dtype = np.uint8)
-  return cv2.dilate(pic, kernel)
+
 
 def test_apply_transformations():
   a = np.random.randint(0, 2, size = (64, 64), dtype = np.bool8)
@@ -75,6 +77,9 @@ def random_affine() -> np.ndarray:
         c, d = c / 2, d / 2
     return np.array([[a, b, e],
                      [c, d, f]])
+
+
+sierpinski_128 = sierpinski_gen(128)
 
 if "__main__" == __name__:
   test_apply_transformations()
