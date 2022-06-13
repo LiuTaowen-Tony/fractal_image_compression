@@ -1,0 +1,110 @@
+import numpy as np
+import cv2
+from numba import njit, jit
+
+from typing import List, Tuple, Callable
+
+Chromosome = List[np.ndarray]
+DistanceMetric = Callable[[np.ndarray, np.ndarray], float]
+Population = List[Chromosome]
+
+
+def w(x, mat1, mat2, mat3):
+  x_l, y_l = x.shape
+  mat1 = mat1.copy()
+  mat2 = mat2.copy()
+  mat3 = mat3.copy()
+  mat1[0, 2] = mat1[0, 2] * x_l
+  mat2[0, 2] = mat2[0, 2] * x_l
+  mat3[0, 2] = mat3[0, 2] * x_l
+  mat1[1, 2] = mat1[1, 2] * y_l
+  mat2[1, 2] = mat2[1, 2] * y_l
+  mat3[1, 2] = mat3[1, 2] * y_l
+  a = cv2.warpAffine(x, mat1, x.shape)
+  b = cv2.warpAffine(x, mat2, x.shape)
+  c = cv2.warpAffine(x, mat3, x.shape)
+  return a + b + c
+
+# get sierpinski's image
+def sierpinski():
+  pic = np.ones((64,64), dtype = np.float32)
+  mat1 = np.array([[0.5, 0, 0], 
+                   [0, 0.5, 0]])
+  mat2 = np.array([[0.5, 0, 0.5], 
+                   [0, 0.5, 0]])
+  mat3 = np.array([[0.5, 0, 0], 
+                   [0, 0.5, 0.5]])
+  for _ in range(100):
+    pic = w(pic, mat1, mat2, mat3)
+  return pic
+sierpinski = sierpinski()
+
+def stacked_metric(pic1, pic2):
+  d = 0
+  size = pic1.shape[0]
+  factor = 1
+  while size >= 8:
+    d_t = np.sum(np.square(pic1 - pic2)) / np.sum(np.square(pic1)) / np.sum(np.square(pic2))
+    d += d_t * factor
+    factor = 4 * factor ** 2
+    size = int(size / 2)
+    pic1 = cv2.resize(pic1, (size, size))
+    pic2 = cv2.resize(pic2, (size, size))
+  return d
+
+
+
+def random_affine() -> np.ndarray:
+    e, f = np.random.uniform(0., 1., 2)
+    a, b = np.random.uniform(-e, 1-e, 2)
+    if (a + b + e) > 1 or (a + b - e) < 0:
+        a, b = a / 2, b / 2
+    c, d = np.random.uniform(-f, 1-f, 2)
+    if (c + d + f) > 1 or (c + d - f) < 0:
+        c, d = c / 2, d / 2
+    return np.abs(np.array([[a, b, e],
+                     [c, d, f]]))
+
+def det_abs(mat):
+  return np.abs(mat[0, 0] * mat[1, 1] - mat[0, 1] * mat[1, 0])
+
+
+def fitness(args):
+  (mat1, mat2, mat3) = args
+  pic = np.ones((64,64), dtype = np.float32)
+  for _ in range(5):
+    pic = w(pic, mat1, mat2, mat3)
+  # cv2.imshow('pic', pic)
+  # cv2.waitKey(0)
+  return stacked_metric(sierpinski, pic)
+
+# # the better the closer to 0
+# def fitness(args):
+#   mat1, mat2, mat3 = args
+#   y = w(sierpinski, mat1, mat2, mat3)
+  
+#   punish_on_identity_map = 0
+#   punish_on_identity_map += det_abs(mat1) * 2000
+#   punish_on_identity_map += det_abs(mat2) * 2000
+#   punish_on_identity_map += det_abs(mat3) * 2000
+
+#   return stacked_metric(sierpinski, y) + punish_on_identity_map 
+
+if __name__ == '__main__':
+  mat1 = random_affine()
+  mat2 = random_affine()
+  mat3 = random_affine()
+  mat4 = np.array([[0.5, 0, 0],
+                   [0, 0.5, 0]])
+  mat5 = np.array([[0.5, 0, 0.5],
+                    [0, 0.5, 0]])
+  mat6 = np.array([[0.5, 0, 0],
+                    [0, 0.5, 0.5]])
+
+  chromo1 = (mat1, mat2, mat3)
+  chromo2 = (mat4, mat5, mat6)
+  print(chromo1)
+
+
+  print(fitness(chromo1))
+  print(fitness(chromo2))
