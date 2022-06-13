@@ -4,7 +4,6 @@ from typing import Dict, List, Tuple
 from new_utils import *
 from new_mutations import mutate
 import params as PARAMS
-from numba import njit
 from copy import deepcopy
 
 def selection(item_score_map: List[Tuple[Chromosome, float]], num_Best: int, 
