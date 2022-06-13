@@ -8,22 +8,29 @@ Chromosome = List[np.ndarray]
 DistanceMetric = Callable[[np.ndarray, np.ndarray], float]
 Population = List[Chromosome]
 
+def changeSize(mat, coord1, coord2, scale):
+  mat[coord1,coord2] = mat[coord1,coord2]*scale
+  return mat
 
-def w(x, mat1, mat2, mat3):
+
+def w(x, matList):
   x_l, y_l = x.shape
-  mat1 = mat1.copy()
-  mat2 = mat2.copy()
-  mat3 = mat3.copy()
-  mat1[0, 2] = mat1[0, 2] * x_l
-  mat2[0, 2] = mat2[0, 2] * x_l
-  mat3[0, 2] = mat3[0, 2] * x_l
-  mat1[1, 2] = mat1[1, 2] * y_l
-  mat2[1, 2] = mat2[1, 2] * y_l
-  mat3[1, 2] = mat3[1, 2] * y_l
-  a = cv2.warpAffine(x, mat1, x.shape)
-  b = cv2.warpAffine(x, mat2, x.shape)
-  c = cv2.warpAffine(x, mat3, x.shape)
-  return a + b + c
+  matList = [i.copy() for i in matList]
+  #mat1 = mat1.copy()
+  #mat2 = mat2.copy()
+  #mat3 = mat3.copy()
+  matList = [changeSize(changeSize(i, 0, 2, x_l), 1, 2, y_l) for i in matList]
+  #mat1[0, 2] = mat1[0, 2] * x_l
+  #mat2[0, 2] = mat2[0, 2] * x_l
+  #mat3[0, 2] = mat3[0, 2] * x_l
+  #mat1[1, 2] = mat1[1, 2] * y_l
+  #mat2[1, 2] = mat2[1, 2] * y_l
+  #mat3[1, 2] = mat3[1, 2] * y_l
+  affList = [cv2.warpAffine(x, mat, x.shape) for mat in matList]
+  #a = cv2.warpAffine(x, mat1, x.shape)
+  #b = cv2.warpAffine(x, mat2, x.shape)
+  #c = cv2.warpAffine(x, mat3, x.shape)
+  return sum(affList)
 
 # get sierpinski's image
 def sierpinski():
@@ -69,26 +76,34 @@ def det_abs(mat):
   return np.abs(mat[0, 0] * mat[1, 1] - mat[0, 1] * mat[1, 0])
 
 
-def fitness(args):
-  (mat1, mat2, mat3) = args
-  pic = np.ones((64,64), dtype = np.float32)
-  for _ in range(5):
-    pic = w(pic, mat1, mat2, mat3)
-  # cv2.imshow('pic', pic)
-  # cv2.waitKey(0)
-  return stacked_metric(sierpinski, pic)
-
-# # the better the closer to 0
 # def fitness(args):
-#   mat1, mat2, mat3 = args
-#   y = w(sierpinski, mat1, mat2, mat3)
-  
-#   punish_on_identity_map = 0
-#   punish_on_identity_map += det_abs(mat1) * 2000
-#   punish_on_identity_map += det_abs(mat2) * 2000
-#   punish_on_identity_map += det_abs(mat3) * 2000
+#   (mat1, mat2, mat3) = args
+#   pic = np.ones((64,64), dtype = np.float32)
+#   for _ in range(5):
+#     pic = w(pic, mat1, mat2, mat3)
+#   # cv2.imshow('pic', pic)
+#   # cv2.waitKey(0)
+#   return stacked_metric(sierpinski, pic)
 
-#   return stacked_metric(sierpinski, y) + punish_on_identity_map 
+def contFactor(mat):
+  matValsSqrd = sum([[mat[i,j]^2 for i in range(2)] for j in range(2)])
+  return np.sqrt((matValsSqrd + np.sqrt(matValsSqrd^2 - 4(mat[0, 0] * mat[1, 1] - mat[0, 1] * mat[1, 0])^2))/2)
+
+def penalizeContFac(mats, STDCT):
+ maxCFac = max([contFactor(mat) for mat in mats])
+ return (1 - maxCFac^10)*np.exp(-(maxCFac/(2*STDCT))^2)
+
+def penalizeCompFac(mats, STDCP):
+  return(np.exp(-(len(mats)/(2*STDCP))^2))
+
+# the better the closer to 0
+def fitness(chromo, STDCT, STDCP):
+   mats = chromo.genes
+   y = w(sierpinski, mats)
+  
+   punish_on_identity_map = sum(det_abs(mat) for mat in mats)
+
+   return stacked_metric(sierpinski, y) * penalizeContFac(mats, STDCT) * penalizeCompFac(mats, STDCP) + punish_on_identity_map 
 
 if __name__ == '__main__':
   mat1 = random_affine()

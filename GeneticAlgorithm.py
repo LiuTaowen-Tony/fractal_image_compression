@@ -1,5 +1,8 @@
 # flake8: noqa E501
 import random
+import numpy as np
+from genetic_sierpinski.new_utils import *
+from genetic_sierpinski.mutations import *
 
 
 class Chromosome():
@@ -17,16 +20,13 @@ class Population():
         self.mutProb = mutProb
         self.ifsMutProb = ifsMutProb
 
-
     def selection(self):
-        best = {} # may need to add initial value of 0 or something so can be overwritten
-        for i in self.members:
-            minBestIndex = best.values().index(min(best.values()))
-            if fitness(i) > best.values()[minBestIndex]:
-                best.update({i, fitness(i)})
-                if len(best) > self.bestMax:
-                    best.pop(best.keys()[minBestIndex])
-        self.members = best.keys()
+        memberFitBestSorted =  sorted([(chromo, fitness(chromo)) for chromo in self.members], key=lambda x: x[1])
+        best = memberFitBestSorted[:self.bestMax]
+        def select(fitness): return (1 - 10 / np.log(fitness)) < np.random.random()    
+        survived = [chromo for chromo, fitness in  memberFitBestSorted[self.bestMax:] if select(fitness)]
+        survived.extend([chromo for (chromo, _) in best])
+        self.members = survived
 
     def crossover(self):
         newMembers = []
@@ -57,8 +57,15 @@ class Population():
                     if random.random() < 0.5:
                         self.members[i].gene.remove(random.choice(self.members[i].gene))
                     else:
-                        newMembers.append(randAffine())
+                        newMembers.append(random_affine())
                 else:
-                    # do (maybe one of many) map mutations
+                    if np.random.random() < 0.5: map_mutation(self.members[i])
+                    else:                        map_perturbation(self.members[i])
+
                 i = 0
         self.members.extend(newMembers)
+
+    def repair(self):
+        #controls growth: stops chromosomes from having too many genes and the population being too large
+        self.members = self.members[:self.popMax]
+        self.members = [i.genes[:self.chromLenMax] for i in self.members]
