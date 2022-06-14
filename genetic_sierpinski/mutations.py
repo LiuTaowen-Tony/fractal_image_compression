@@ -1,6 +1,6 @@
 import numpy as np
 import cv2
-from utils import *
+from genetic_sierpinski.new_utils import *
 
 def affine_mat_to_mat_vec(affine_mat):
   mat = affine_mat[:, :2]
@@ -65,21 +65,24 @@ def mutate(cs : List[Chromosome], mutProb : float):
             #     if np.random.random() < 0.5: map_mutation(chromo)
             #     else:                        map_perturbation(chromo)
 
+# both types of map mutation need to repair if out of bounds
+
 def map_mutation(chromosome: Chromosome):
     """
     mutate a chromosome by changing a random affine map
     """
     flag = np.random.random()
-    i = np.random.randint(0, len(chromosome))
-    item = chromosome[i]
+    i = np.random.randint(0, len(chromosome.genes))
+    item = chromosome.genes[i]
     if flag < 0.25:   rotation(item)
     elif flag < 0.5:  translation(item)
     elif flag < 0.75: skew(item)
     else:             scale(item)
 
+
 def map_perturbation(chromosome: Chromosome):
-    i = np.random.randint(0, len(chromosome))
-    map = chromosome[i]
+    i = np.random.randint(0, len(chromosome.genes))
+    map = chromosome.genes[i]
     flag = np.random.random()
     if flag < 1 / 6:   map[0,0] += np.random.random() - 0.5
     elif flag < 2 / 6: map[0,1] += np.random.random() - 0.5
@@ -87,9 +90,3 @@ def map_perturbation(chromosome: Chromosome):
     elif flag < 4 / 6: map[1,1] += np.random.random() - 0.5
     elif flag < 5 / 6: map[0,2] += np.random.random() - 0.5
     else:              map[1,2] += np.random.random() - 0.5
-
-    
-
-
-
-

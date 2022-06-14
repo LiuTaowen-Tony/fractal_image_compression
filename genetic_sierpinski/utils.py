@@ -1,4 +1,3 @@
-from grpc import Call
 import numpy as np
 import cv2
 from typing import List, Tuple, Callable
@@ -13,7 +12,6 @@ def dilate(pic):
 
 def similarity_measure(pic1, pic2):
   assert pic1.shape == pic2.shape
-  assert pic1.dtype == pic2.dtype == np.bool8
   intersection = np.logical_and(pic1, pic2)
   union = np.logical_or(pic1, pic2)
   return np.sum(intersection) / np.sum(union)
