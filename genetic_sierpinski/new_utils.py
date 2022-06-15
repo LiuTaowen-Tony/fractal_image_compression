@@ -60,8 +60,6 @@ def stacked_metric(pic1, pic2):
     pic2 = cv2.resize(pic2, (size, size))
   return np.exp(-d**2/10000**2)
 
-
-
 def random_affine() -> np.ndarray:
     e, f = np.random.uniform(0., 1., 2)
     a, b = np.random.uniform(-e, 1-e, 2)
