@@ -71,6 +71,7 @@ def map_mutation(chromosome: Chromosome):
     """
     mutate a chromosome by changing a random affine map
     """
+    # needs repairing
     flag = np.random.random()
     i = np.random.randint(0, len(chromosome.genes))
     item = chromosome.genes[i]
@@ -80,13 +81,21 @@ def map_mutation(chromosome: Chromosome):
     else:             scale(item)
 
 
-def map_perturbation(chromosome: Chromosome):
+def map_perturbation(chromosome: Chromosome, STDCT, STDCP):
     i = np.random.randint(0, len(chromosome.genes))
     map = chromosome.genes[i]
+    (a, b, e,
+   c, d, f) = map.reshape((6,))
+    randJitter = (1 - fitness(chromosome, STDCT, STDCP)) * np.random.uniform(-1., 1.)
     flag = np.random.random()
-    if flag < 1 / 6:   map[0,0] += np.random.random() - 0.5
-    elif flag < 2 / 6: map[0,1] += np.random.random() - 0.5
-    elif flag < 3 / 6: map[1,0] += np.random.random() - 0.5
-    elif flag < 4 / 6: map[1,1] += np.random.random() - 0.5
-    elif flag < 5 / 6: map[0,2] += np.random.random() - 0.5
-    else:              map[1,2] += np.random.random() - 0.5
+    if flag < 1 / 6 and np.abs(a + randJitter + e - 0.5) <= 0.5:   map[0,0] += randJitter
+    elif flag < 2 / 6 and np.abs(b + randJitter + e - 0.5) <= 0.5: map[0,1] += randJitter
+    elif flag < 3 / 6 and np.abs(c + randJitter + f - 0.5) <= 0.5: map[1,0] += randJitter
+    elif flag < 4 / 6 and np.abs(d + randJitter + f - 0.5) <= 0.5: map[1,1] += randJitter
+    elif flag < 5 / 6 and np.abs(e - 0.5) <= 0.5: map[0,2] += randJitter
+    elif flag < 1 and np.abs(f - 0.5) <= 0.5: map[1,2] += randJitter
+
+    if (map[0,0] + map[0,1] + map[0,2]) > 1 or (map[0,0] + map[0,1] + map[0,2]) < 0:
+        map[0,0], map[0,1] = map[0,0] / 2, map[0,1] / 2
+    if (map[1,0] + map[1,1] + map[1,2]) > 1 or (map[1,0] + map[1,1] + map[1,2]) < 0:
+        map[1,0], map[1,1] = map[1,0] / 2, map[1,1] / 2

@@ -65,10 +65,10 @@ def stacked_metric(pic1, pic2):
 def random_affine() -> np.ndarray:
     e, f = np.random.uniform(0., 1., 2)
     a, b = np.random.uniform(-e, 1-e, 2)
-    if (a + b + e) > 1 or (a + b - e) < 0:
+    if (a + b + e) > 1 or (a + b + e) < 0:
         a, b = a / 2, b / 2
     c, d = np.random.uniform(-f, 1-f, 2)
-    if (c + d + f) > 1 or (c + d - f) < 0:
+    if (c + d + f) > 1 or (c + d + f) < 0:
         c, d = c / 2, d / 2
     return np.array([[a, b, e],
                      [c, d, f]])
@@ -86,15 +86,23 @@ def det_abs(mat):
 #   # cv2.waitKey(0)
 #   return stacked_metric(sierpinski, pic)
 
-def contFactor(mat):
-  matValsSqrd = mat[0, 0]**2 + mat[1, 1]**2 + mat[0, 1]**2 + mat[1, 0]**2
-
-  return np.sqrt((matValsSqrd + np.sqrt(matValsSqrd**2 - 4*((mat[0, 0] * mat[1, 1]) - (mat[0, 1] * mat[1, 0]))**2))/2)
+def contFactor(mat): return np.linalg.norm(np.array([[mat[0,0], mat[0,1]],
+                                              [mat[1,0], mat[1,1]]]), ord=2)
 
 def penalizeContFac(mats, STDCT):
- maxCFac = max([contFactor(mat) for mat in mats])
- assert (1 - maxCFac**10) >= 0
- return (1 - maxCFac**10) * np.exp(-(maxCFac/(2*STDCT))**2)
+  matContFactors = [contFactor(mat) for mat in mats]
+  maxCFac = max(matContFactors)
+  while maxCFac > 1:
+    badMatIndex = matContFactors.index(maxCFac)
+    (a, b, e,
+     c, d, f) = mats[badMatIndex].reshape((6,))
+    opNorm = np.linalg.norm(np.array([[a, b],
+                                      [c, d]]), ord=2)
+    mats[badMatIndex] = np.array([[a/opNorm, b/opNorm, e],
+                                 [c/opNorm, d/opNorm, f]])
+    matContFactors = [contFactor(mat) for mat in mats]
+    maxCFac = max(matContFactors)
+  return (1 - maxCFac**10) * np.exp(-(maxCFac/(2*STDCT))**2)
 
 def penalizeCompFac(mats, STDCP):
   return(np.exp(-(len(mats)/(2*STDCP))**2))
@@ -104,7 +112,7 @@ def fitness(chromo, STDCT, STDCP):
    mats = chromo.genes
    y = w(sierpinski, mats)
   
-   punish_on_identity_map = sum(det_abs(mat) for mat in mats) * 10000
+   #punish_on_identity_map = sum(det_abs(mat) for mat in mats) * 10000
 
    return stacked_metric(sierpinski, y) * penalizeContFac(mats, STDCT) * penalizeCompFac(mats, STDCP) #+ punish_on_identity_map 
 

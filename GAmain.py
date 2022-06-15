@@ -1,7 +1,7 @@
 from GeneticAlgorithm import *
 
 chromos = [Chromosome([random_affine() for _ in range(3)]) for _ in range(50)]
-pop = Population(chromos, 5, 60, 50, 0.3, 0.9, 0.5, 0.6, 30)
+pop = Population(chromos, 15, 10, 50, 0.5, 0.1, 0.5, 0.6, 3)
 for i in range(10000):
     pop.selection()
     pop.crossover()
@@ -23,3 +23,4 @@ for _ in range(5):
      pic = w(pic, genes)
      cv2.imshow("result", pic)
      cv2.waitKey(0)
+print(stacked_metric(sierpinski, pic))

@@ -2,6 +2,7 @@
 import random
 import re
 import numpy as np
+from copy import deepcopy
 from genetic_sierpinski.new_utils import *
 from genetic_sierpinski.mutations import *
 
@@ -28,44 +29,48 @@ class Population():
 
     def selection(self):
         memberFitBestSorted =  sorted([(chromo, fitness(chromo, self.STDCT, self.STDCP)) for chromo in self.members], key=lambda x: x[1], reverse=True)
-        best = memberFitBestSorted[:self.bestMax]
-        rest = memberFitBestSorted[self.bestMax:]
-        # need to ensure that some other than best survive
-
-        n_rest = []
-        for i in range(35):
-            max = sum(i[1] for i in rest)
-            selection_probs = [i[1]/max for i in rest]
-            survivorIndex = np.random.choice(len(rest), p=selection_probs)
-            n_rest.append(rest.pop(survivorIndex))
-        self.members = [i[0] for i in n_rest]
-        self.best = best
+        self.best = memberFitBestSorted[:self.bestMax]
 
     def crossover(self):
-        newMembers = []
-        i = 0
-        while i < len(self.members):
-            if self.crossProb > np.random.random():
-                parent1 = self.members[i]
-                self.members.remove(parent1)
-                try:
-                    parent2 = np.random.choice(self.members)
-                except:
-                    newMembers.append(parent1)
-                    break
-                self.members.remove(parent2)
-                cGene1 = random.choice(parent1.genes)
-                cGene2 = random.choice(parent2.genes)
-                cPoint1 = npGetArrInd(parent1.genes, cGene1)
-                cPoint2 = npGetArrInd(parent2.genes, cGene2)
-                child1 = parent1.genes[0: cPoint1]
-                child1.extend(parent2.genes[cPoint2:])
-                child2 = parent2.genes[0: cPoint2]
-                child2.extend(parent1.genes[cPoint1:])
-                newMembers.extend([Chromosome(child1), Chromosome(child2)])
-                i = 0
-            else: i += 1
-        self.members.extend(newMembers)
+        newMembers = [i[0] for i in self.best]
+        
+        for i in self.best:
+            parent1 = i[0]
+            parent2 = random.choice(self.best)[0]
+            cGene1 = random.choice(parent1.genes)
+            cGene2 = random.choice(parent2.genes)
+            cPoint1 = npGetArrInd(parent1.genes, cGene1)
+            cPoint2 = npGetArrInd(parent2.genes, cGene2)
+            child1 = deepcopy(parent1.genes[0: cPoint1])
+            child1.extend(deepcopy(parent2.genes[cPoint2:]))
+            child2 = deepcopy(parent2.genes[0: cPoint2])
+            child2.extend(deepcopy(parent1.genes[cPoint1:]))
+            newMembers.extend([Chromosome(child1), Chromosome(child2)])
+        self.members = newMembers[:self.popMax]
+        
+        # i = 0
+        # while i < len(self.members):
+        #     if self.crossProb > np.random.random():
+        #         parent1 = self.members[i]
+        #         self.members.remove(parent1)
+        #         try:
+        #             parent2 = np.random.choice(self.members)
+        #         except:
+        #             newMembers.append(parent1)
+        #             break
+        #         self.members.remove(parent2)
+        #         cGene1 = random.choice(parent1.genes)
+        #         cGene2 = random.choice(parent2.genes)
+        #         cPoint1 = npGetArrInd(parent1.genes, cGene1)
+        #         cPoint2 = npGetArrInd(parent2.genes, cGene2)
+        #         child1 = parent1.genes[0: cPoint1]
+        #         child1.extend(parent2.genes[cPoint2:])
+        #         child2 = parent2.genes[0: cPoint2]
+        #         child2.extend(parent1.genes[cPoint1:])
+        #         newMembers.extend([Chromosome(child1), Chromosome(child2)])
+        #         i = 0
+        #     else: i += 1
+        # self.members.extend(newMembers)
 
     def mutate(self):
         i = 0
@@ -81,10 +86,10 @@ class Population():
 
                 else:
                     if np.random.random() < 0.5:
-                        #map_mutation(self.members[i])
+                        map_mutation(self.members[i])
                         val = 3
                     else:
-                        #map_perturbation(self.members[i])
+                        map_perturbation(self.members[i], self.STDCT, self.STDCP)
                         val = 4
             i += 1
 
