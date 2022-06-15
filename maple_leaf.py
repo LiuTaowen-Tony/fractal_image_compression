@@ -41,3 +41,7 @@ def maple_leaf(_a, _b, _c, _d):
 maple_leaf_white = maple_leaf((1, 0), (1, 0), (1, 0), (1, 0))
 
 maple_leaf_white_0_1 = np.float32(maple_leaf_white) / 255
+
+if __name__ == "__main__":
+  cv2.imshow("maple_leaf", maple_leaf_white)
+  cv2.waitKey(0)
