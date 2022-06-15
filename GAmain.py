@@ -1,7 +1,7 @@
 from GeneticAlgorithm import *
 
 chromos = [Chromosome([random_affine() for _ in range(3)]) for _ in range(50)]
-pop = Population(chromos, 15, 10, 50, 0.5, 0.1, 0.5, 0.6, 3)
+pop = Population(sierpinski, chromos, 15, 10, 50, 0.5, 0.1, 0.5, 0.5, 4)
 for i in range(10000):
     pop.selection()
     pop.crossover()
@@ -19,8 +19,8 @@ pic = np.ones((128,128), dtype = np.uint8)*255
 genes = pop.best[0][0].genes
 for mat in genes:
     print(mat)
-for _ in range(5):
-     pic = w(pic, genes)
-     cv2.imshow("result", pic)
-     cv2.waitKey(0)
-print(stacked_metric(sierpinski, pic))
+for _ in range(7):
+    pic = w(pic, genes)
+cv2.imshow("result", pic)
+cv2.waitKey(0)
+print(stacked_metric(maple_leaf.maple_leaf_white_0_1, pic))

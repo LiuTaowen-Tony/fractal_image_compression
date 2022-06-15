@@ -81,12 +81,12 @@ def map_mutation(chromosome: Chromosome):
     else:             scale(item)
 
 
-def map_perturbation(chromosome: Chromosome, STDCT, STDCP):
+def map_perturbation(target, chromosome: Chromosome, STDCT, STDCP):
     i = np.random.randint(0, len(chromosome.genes))
     map = chromosome.genes[i]
     (a, b, e,
    c, d, f) = map.reshape((6,))
-    randJitter = (1 - fitness(chromosome, STDCT, STDCP)) * np.random.uniform(-1., 1.)
+    randJitter = (1 - fitness(target, chromosome, STDCT, STDCP)) * np.random.uniform(-1., 1.)
     flag = np.random.random()
     if flag < 1 / 6 and np.abs(a + randJitter + e - 0.5) <= 0.5:   map[0,0] += randJitter
     elif flag < 2 / 6 and np.abs(b + randJitter + e - 0.5) <= 0.5: map[0,1] += randJitter

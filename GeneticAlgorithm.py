@@ -15,7 +15,8 @@ class Chromosome():
 
 
 class Population():
-    def __init__(self, chromosomes, bestMax, chromLenMax, popMax, crossProb, mutProb, ifsMutProb, STDCT, STDCP):
+    def __init__(self, target, chromosomes, bestMax, chromLenMax, popMax, crossProb, mutProb, ifsMutProb, STDCT, STDCP):
+        self.target = target
         self.members = chromosomes
         self.bestMax = bestMax
         self.chromLenMax = chromLenMax
@@ -28,12 +29,11 @@ class Population():
         self.STDCP = STDCP
 
     def selection(self):
-        memberFitBestSorted =  sorted([(chromo, fitness(chromo, self.STDCT, self.STDCP)) for chromo in self.members], key=lambda x: x[1], reverse=True)
+        memberFitBestSorted = sorted([(chromo, fitness(self.target, chromo, self.STDCT, self.STDCP)) for chromo in self.members], key=lambda x: x[1], reverse=True)
         self.best = memberFitBestSorted[:self.bestMax]
 
     def crossover(self):
-        newMembers = [i[0] for i in self.best]
-        
+        newMembers = []
         for i in self.best:
             parent1 = i[0]
             parent2 = random.choice(self.best)[0]
@@ -46,8 +46,7 @@ class Population():
             child2 = deepcopy(parent2.genes[0: cPoint2])
             child2.extend(deepcopy(parent1.genes[cPoint1:]))
             newMembers.extend([Chromosome(child1), Chromosome(child2)])
-        self.members = newMembers[:self.popMax]
-        
+        self.members = newMembers
         # i = 0
         # while i < len(self.members):
         #     if self.crossProb > np.random.random():
@@ -73,30 +72,26 @@ class Population():
         # self.members.extend(newMembers)
 
     def mutate(self):
+        # need to mutate the best ones as well
         i = 0
         while i < len(self.members):
             if self.mutProb > np.random.random():
                 if self.ifsMutProb > np.random.random():
                     if np.random.random() < 0.5 and len(self.members[i].genes) != 1:
                         self.members[i].genes.pop(npGetArrInd(self.members[i].genes, random.choice(self.members[i].genes)))
-                        val = 1
                     else:
                         self.members[i].genes.append(random_affine())
-                        val = 2
-
                 else:
                     if np.random.random() < 0.5:
                         map_mutation(self.members[i])
-                        val = 3
                     else:
-                        map_perturbation(self.members[i], self.STDCT, self.STDCP)
-                        val = 4
+                        map_perturbation(self.target, self.members[i], self.STDCT, self.STDCP)
             i += 1
 
     def repair(self):
         #controls growth: stops chromosomes from having too many genes and the population being too large
-        bestChromos = [i[0] for i in self.best]
-        bestChromos.extend(self.members)
-        self.members = bestChromos
+        self.members.extend([i[0] for i in self.best])
+        self.members = [i[0] for i in sorted([(chromo, fitness(self.target, chromo, self.STDCT, self.STDCP))
+                                              for chromo in self.members], key=lambda x: x[1], reverse=True)]
         self.members = self.members[:self.popMax]
         self.members = [Chromosome(i.genes[:self.chromLenMax]) for i in self.members]

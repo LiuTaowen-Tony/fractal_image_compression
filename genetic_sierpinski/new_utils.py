@@ -2,6 +2,7 @@ from xml.dom import NotFoundErr
 import numpy as np
 import cv2
 from numba import njit, jit
+import maple_leaf
 
 from typing import List, Tuple, Callable
 
@@ -105,14 +106,14 @@ def penalizeContFac(mats, STDCT):
 def penalizeCompFac(mats, STDCP):
   return(np.exp(-(len(mats)/(2*STDCP))**2))
 
-# the better the closer to 0
-def fitness(chromo, STDCT, STDCP):
+# the better the closer to 1
+def fitness(target, chromo, STDCT, STDCP):
    mats = chromo.genes
-   y = w(sierpinski, mats)
+   y = w(target, mats)
   
    #punish_on_identity_map = sum(det_abs(mat) for mat in mats) * 10000
 
-   return stacked_metric(sierpinski, y) * penalizeContFac(mats, STDCT) * penalizeCompFac(mats, STDCP) #+ punish_on_identity_map 
+   return stacked_metric(target, y) * penalizeContFac(mats, STDCT) * penalizeCompFac(mats, STDCP) #+ punish_on_identity_map 
 
 def npGetArrInd(arr, item):
   for i in range(len(arr)):

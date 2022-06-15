@@ -30,7 +30,7 @@ def maple_leaf(_a, _b, _c, _d):
   mat4 = np.array([[c, -s, 0.8],
                    [s, c, 0.28]])
 
-  pic = np.ones((64,64), dtype = np.uint8) * 255
+  pic = np.ones((128,128), dtype = np.uint8) * 255
   for _ in range(6):
     # pic = w(pic, [(mat3, *_c)])
     pic = w(pic, [(mat1, *_a), (mat2, *_b), (mat3, *_c), (mat4, *_d)])
@@ -42,6 +42,5 @@ maple_leaf_white = maple_leaf((1, 0), (1, 0), (1, 0), (1, 0))
 
 maple_leaf_white_0_1 = np.float32(maple_leaf_white) / 255
 
-if __name__ == "__main__":
-  cv2.imshow("maple_leaf", maple_leaf_white)
-  cv2.waitKey(0)
+# cv2.imshow("leaf", maple_leaf_white_0_1)
+# cv2.waitKey(0)
